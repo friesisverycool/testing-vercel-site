@@ -1,6 +1,11 @@
 {
-  "functions": {
-    "saveServiceHours": "api/saveServiceHours.js",
-    "getServiceHours": "api/getServiceHours.js"
-  }
+  "version": 2,
+  "builds": [
+    { "src": "api/saveServiceHours.js", "use": "@now/node" },
+    { "src": "api/getServiceHours.js", "use": "@now/node" }
+  ],
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "handle": "filesystem" }
+  ]
 }
