@@ -1,3 +1,42 @@
+
+function fetchDataFromServer() {
+  fetch('/api/serviceHours')
+    .then(response => response.json())
+    .then(data => {
+      // Update your local data array with the fetched data
+      updateLocalData(data);
+      // Update the submitted hours list
+      updateSubmittedHours();
+    })
+    .catch(error => {
+      console.error('Error fetching data from the server:', error);
+    });
+}
+
+function saveDataToServer() {
+  fetch('/api/serviceHours', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  })
+    .then(response => {
+      if (!response.ok) {
+        throw new Error('Failed to save data on the server');
+      }
+      console.log('Data saved to the server successfully');
+      // Fetch updated data after saving
+      fetchDataFromServer();
+    })
+    .catch(error => {
+      console.error('Error saving data to the server:', error);
+    });
+}
+
+// Initial fetch of data from the server
+fetchDataFromServer();
+
 // Load data from localStorage
 let data = JSON.parse(localStorage.getItem('serviceHoursData')) || [];
 
