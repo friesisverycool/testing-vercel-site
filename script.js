@@ -1,5 +1,7 @@
 mixpanel.init("ab47e787320c8c38f1ffb2d868e4fffa");
 
+let data = [];
+
 function fetchDataFromServer() {
   fetch('/api/serviceHours')
     .then(response => {
@@ -8,8 +10,9 @@ function fetchDataFromServer() {
       }
       return response.json();
     })
-    .then(data => {
-      updateLocalData(data);
+    .then(dataFromServer => {
+      // Update local data with data from the server
+      data = dataFromServer;
       updateSubmittedHours();
     })
     .catch(error => {
@@ -30,11 +33,6 @@ function saveDataToServer() {
         throw new Error('Failed to save data on the server');
       }
       console.log('Data saved to the server successfully');
-      return response.json(); // Parse response as JSON
-    })
-    .then(updatedData => {
-      updateLocalData(updatedData); // Update local data with data from the server
-      updateSubmittedHours();
     })
     .catch(error => {
       console.error('Error saving data to the server:', error);
@@ -45,7 +43,15 @@ function saveDataToServer() {
 fetchDataFromServer();
 
 // Load data from localStorage
-let data = JSON.parse(localStorage.getItem('serviceHoursData')) || [];
+data = JSON.parse(localStorage.getItem('serviceHoursData')) || [];
+
+// Check if you want to clear all data (including logs and total hours)
+let clearAllData = false;
+
+if (clearAllData) {
+  // Clear all data by setting an empty array
+  data = [];
+}
 
 document.getElementById('serviceHourForm').addEventListener('submit', function (event) {
   event.preventDefault();
@@ -71,7 +77,6 @@ document.getElementById('serviceHourForm').addEventListener('submit', function (
 
   updateSubmittedHours();
   saveDataToLocalStorage();
-  saveDataToServer();
 });
 
 function updateSubmittedHours() {
@@ -108,9 +113,15 @@ function updateSubmittedHours() {
   });
 }
 
-function saveDataToLocalStorage() {
-  localStorage.setItem('serviceHoursData', JSON.stringify(data));
-}
+// Save data to localStorage when the page is about to be unloaded
+window.addEventListener('beforeunload', function () {
+  saveDataToLocalStorage();
+});
+
+// Save data to the server when the page is about to be unloaded
+window.addEventListener('beforeunload', function () {
+  saveDataToServer();
+});
 
 // Initial update of submitted hours
 updateSubmittedHours();
