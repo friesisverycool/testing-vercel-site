@@ -3,7 +3,7 @@ mixpanel.init("ab47e787320c8c38f1ffb2d868e4fffa");
 let data = [];
 
 function fetchDataFromServer() {
-  fetch('/api/serviceHours')
+  return fetch('/api/serviceHours')
     .then(response => {
       if (!response.ok) {
         throw new Error('Failed to fetch data from the server');
@@ -13,7 +13,6 @@ function fetchDataFromServer() {
     .then(dataFromServer => {
       // Update local data with data from the server
       data = dataFromServer;
-      updateSubmittedHours();
     })
     .catch(error => {
       console.error('Error fetching data from the server:', error);
@@ -21,7 +20,7 @@ function fetchDataFromServer() {
 }
 
 function saveDataToServer() {
-  fetch('/api/serviceHours', {
+  return fetch('/api/serviceHours', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -33,6 +32,12 @@ function saveDataToServer() {
         throw new Error('Failed to save data on the server');
       }
       console.log('Data saved to the server successfully');
+      return response.json(); // Parse response as JSON
+    })
+    .then(updatedData => {
+      // Update local data with data from the server
+      data = updatedData;
+      updateSubmittedHours();
     })
     .catch(error => {
       console.error('Error saving data to the server:', error);
@@ -40,10 +45,12 @@ function saveDataToServer() {
 }
 
 // Initial fetch of data from the server
-fetchDataFromServer();
-
-// Load data from localStorage
-data = JSON.parse(localStorage.getItem('serviceHoursData')) || [];
+fetchDataFromServer()
+  .then(() => {
+    // Load data from localStorage after fetching from the server
+    data = JSON.parse(localStorage.getItem('serviceHoursData')) || [];
+    updateSubmittedHours();
+  });
 
 // Check if you want to clear all data (including logs and total hours)
 let clearAllData = false;
@@ -77,6 +84,7 @@ document.getElementById('serviceHourForm').addEventListener('submit', function (
 
   updateSubmittedHours();
   saveDataToLocalStorage();
+  saveDataToServer();
 });
 
 function updateSubmittedHours() {
