@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "api/saveServiceHours.js": {
+      "runtime": "node@14"
+    }
+  }
+}
