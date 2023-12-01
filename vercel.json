@@ -1,7 +1,7 @@
 {
   "functions": {
     "api/serviceHours.js": {
-      "runtime": "now-php@2.0.0"
+      "runtime": "vercel-php@0.6.0"
     }
   }
 }
