@@ -1,9 +1,11 @@
 {
   "functions": {
-    "api/saveServiceHours": {
+    "saveServiceHours": {
+      "handler": "api/saveServiceHours.handler",
       "memory": 512
     },
-    "api/getServiceHours": {
+    "getServiceHours": {
+      "handler": "api/getServiceHours.handler",
       "memory": 512
     }
   },
@@ -12,4 +14,3 @@
     { "src": "/api/(.*)", "dest": "/api/$1" }
   ]
 }
-
