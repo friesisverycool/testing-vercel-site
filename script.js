@@ -39,6 +39,8 @@ document.getElementById('serviceHourForm').addEventListener('submit', function (
     updateSubmittedHours();
     // Save data to localStorage
     saveDataToLocalStorage();
+    // Save data to the server
+    saveDataToServer();
 });
 
 function updateSubmittedHours() {
@@ -86,6 +88,26 @@ function updateSubmittedHours() {
 // Save data to localStorage
 function saveDataToLocalStorage() {
     localStorage.setItem('serviceHoursData', JSON.stringify(data));
+}
+
+// Save data to the server
+function saveDataToServer() {
+    fetch('./api/saveServiceHours', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to save data on the server');
+        }
+        console.log('Data saved to the server successfully');
+    })
+    .catch(error => {
+        console.error('Error saving data to the server:', error);
+    });
 }
 
 // Initial update of submitted hours
