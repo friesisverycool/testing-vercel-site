@@ -1,7 +1,7 @@
 {
   "functions": {
-    "api/saveServiceHours.js": {
-      "runtime": "node@14"
+    "api/serviceHours.js": {
+      "runtime": "now-php@2.0.0"
     }
   }
 }
