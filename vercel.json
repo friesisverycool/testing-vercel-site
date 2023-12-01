@@ -1,10 +1,15 @@
 {
   "functions": {
-    "saveServiceHours": "api/saveServiceHours.js",
-    "getServiceHours": "api/getServiceHours.js"
+    "api/saveServiceHours": {
+      "memory": 512
+    },
+    "api/getServiceHours": {
+      "memory": 512
+    }
   },
   "routes": [
     { "handle": "filesystem" },
     { "src": "/api/(.*)", "dest": "/api/$1" }
   ]
 }
+
