@@ -1,3 +1,4 @@
+
 mixpanel.init("ab47e787320c8c38f1ffb2d868e4fffa");
 
 let data = [];
@@ -13,6 +14,8 @@ function fetchDataFromServer() {
     .then(dataFromServer => {
       // Update local data with data from the server
       data = dataFromServer;
+      // Update submitted hours after fetching data
+      updateSubmittedHours();
     })
     .catch(error => {
       console.error('Error fetching data from the server:', error);
@@ -37,6 +40,7 @@ function saveDataToServer() {
     .then(updatedData => {
       // Update local data with data from the server
       data = updatedData;
+      // Update submitted hours after saving data
       updateSubmittedHours();
     })
     .catch(error => {
@@ -49,6 +53,7 @@ fetchDataFromServer()
   .then(() => {
     // Load data from localStorage after fetching from the server
     data = JSON.parse(localStorage.getItem('serviceHoursData')) || [];
+    // Update submitted hours after loading from localStorage
     updateSubmittedHours();
   });
 
@@ -60,7 +65,7 @@ if (clearAllData) {
   data = [];
 }
 
-document.getElementById('serviceHourForm').addEventListener('submit', function (event) {
+document.getElementById('serviceHourForm').addEventListener('submit', async function (event) {
   event.preventDefault();
 
   let name = document.getElementById('name').value;
@@ -82,9 +87,8 @@ document.getElementById('serviceHourForm').addEventListener('submit', function (
   document.getElementById('hours').value = '';
   document.getElementById('description').value = '';
 
-  updateSubmittedHours();
-  saveDataToLocalStorage();
-  saveDataToServer();
+  // Save data to localStorage and the server
+  await Promise.all([saveDataToLocalStorage(), saveDataToServer()]);
 });
 
 function updateSubmittedHours() {
