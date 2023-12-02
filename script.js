@@ -1,139 +1,92 @@
 
-mixpanel.init("ab47e787320c8c38f1ffb2d868e4fffa");
-
-let data = [];
-
-function fetchDataFromServer() {
-  return fetch('/api/serviceHours')
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Failed to fetch data from the server');
-      }
-      return response.json();
-    })
-    .then(dataFromServer => {
-      // Update local data with data from the server
-      data = dataFromServer;
-      // Update submitted hours after fetching data
-      updateSubmittedHours();
-    })
-    .catch(error => {
-      console.error('Error fetching data from the server:', error);
-    });
-}
-
-function saveDataToServer() {
-  return fetch('/api/serviceHours', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  })
-    .then(response => {
-      if (!response.ok) {
-        throw new Error('Failed to save data on the server');
-      }
-      console.log('Data saved to the server successfully');
-      return response.json(); // Parse response as JSON
-    })
-    .then(updatedData => {
-      // Update local data with data from the server
-      data = updatedData;
-      // Update submitted hours after saving data
-      updateSubmittedHours();
-    })
-    .catch(error => {
-      console.error('Error saving data to the server:', error);
-    });
-}
-
-// Initial fetch of data from the server
-fetchDataFromServer()
-  .then(() => {
-    // Load data from localStorage after fetching from the server
-    data = JSON.parse(localStorage.getItem('serviceHoursData')) || [];
-    // Update submitted hours after loading from localStorage
-    updateSubmittedHours();
-  });
+// Load data from localStorage
+let data = JSON.parse(localStorage.getItem('serviceHoursData')) || [];
 
 // Check if you want to clear all data (including logs and total hours)
 let clearAllData = false;
 
 if (clearAllData) {
-  // Clear all data by setting an empty array
-  data = [];
+    // Clear all data by setting an empty array
+    data = [];
 }
+document.getElementById('serviceHourForm').addEventListener('submit', function (event) {
+    event.preventDefault();
 
-document.getElementById('serviceHourForm').addEventListener('submit', async function (event) {
-  event.preventDefault();
+    let name = document.getElementById('name').value;
+    let date = document.getElementById('date').value;
+    let hours = parseInt(document.getElementById('hours').value);
+    let description = document.getElementById('description').value;
 
-  let name = document.getElementById('name').value;
-  let date = document.getElementById('date').value;
-  let hours = parseInt(document.getElementById('hours').value);
-  let description = document.getElementById('description').value;
+    // Check if the person already exists in the data array
+    let person = data.find(item => item.name === name);
 
-  let person = data.find(item => item.name === name);
+    if (person) {
+        // If the person exists, add the new hours to their total hours
+        person.hours += hours;
+        person.logs.push({ date, hours, description }); // Add the log entry
+    } else {
+        // If the person does not exist, add them to the data array with the given hours
+        data.push({ name, hours, logs: [{ date, hours, description }] });
+    }
 
-  if (person) {
-    person.hours += hours;
-    person.logs.push({ date, hours, description });
-  } else {
-    data.push({ name, hours, logs: [{ date, hours, description }] });
-  }
+    // Clear the form inputs
+    document.getElementById('name').value = '';
+    document.getElementById('date').value = '';
+    document.getElementById('hours').value = '';
+    document.getElementById('description').value = '';
 
-  document.getElementById('name').value = '';
-  document.getElementById('date').value = '';
-  document.getElementById('hours').value = '';
-  document.getElementById('description').value = '';
-
-  // Save data to localStorage and the server
-  await Promise.all([saveDataToLocalStorage(), saveDataToServer()]);
+    // Update the submitted hours list
+    updateSubmittedHours();
+    // Save data to localStorage
+    saveDataToLocalStorage();
 });
 
 function updateSubmittedHours() {
-  let submittedHoursList = document.getElementById('submittedHours');
+    let submittedHoursList = document.getElementById('submittedHours');
 
-  while (submittedHoursList.firstChild) {
-    submittedHoursList.removeChild(submittedHoursList.firstChild);
-  }
+    // Clear the current list items
+    while (submittedHoursList.firstChild) {
+        submittedHoursList.removeChild(submittedHoursList.firstChild);
+    }
 
-  data.forEach(person => {
-    let listItem = document.createElement('li');
-    let toggleButton = document.createElement('button');
-    toggleButton.textContent = 'Toggle Logs';
-    toggleButton.className = 'toggleButton';
-    toggleButton.addEventListener('click', function () {
-      let logsList = listItem.querySelector('.logs');
-      logsList.style.display = (logsList.style.display === 'none' || logsList.style.display === '') ? 'block' : 'none';
+    // Add new list items for each person's total hours and logs
+    data.forEach(person => {
+        let listItem = document.createElement('li');
+        let toggleButton = document.createElement('button');
+        toggleButton.textContent = 'Toggle Logs';
+        toggleButton.className = 'toggleButton'; // Added class name
+        toggleButton.addEventListener('click', function () {
+            // Toggle the display of logs
+            let logsList = listItem.querySelector('.logs');
+            logsList.style.display = (logsList.style.display === 'none' || logsList.style.display === '') ? 'block' : 'none';
+        });
+
+        listItem.textContent = `${person.name}: ${person.hours} hours `;
+        listItem.appendChild(toggleButton);
+
+        // Create a list for logs
+        let logsList = document.createElement('ul');
+        logsList.className = 'logs';
+
+        // Add new list items for each log entry
+        person.logs.forEach(log => {
+            let logItem = document.createElement('li');
+            logItem.textContent = `Date: ${log.date}, Hours: ${log.hours}, Description: ${log.description}`;
+            logsList.appendChild(logItem);
+        });
+
+        // Append logs list to the main list item
+        listItem.appendChild(logsList);
+
+        // Append the main list item to the submitted hours list
+        submittedHoursList.appendChild(listItem);
     });
-
-    listItem.textContent = `${person.name}: ${person.hours} hours `;
-    listItem.appendChild(toggleButton);
-
-    let logsList = document.createElement('ul');
-    logsList.className = 'logs';
-
-    person.logs.forEach(log => {
-      let logItem = document.createElement('li');
-      logItem.textContent = `Date: ${log.date}, Hours: ${log.hours}, Description: ${log.description}`;
-      logsList.appendChild(logItem);
-    });
-
-    listItem.appendChild(logsList);
-    submittedHoursList.appendChild(listItem);
-  });
 }
 
-// Save data to localStorage when the page is about to be unloaded
-window.addEventListener('beforeunload', function () {
-  saveDataToLocalStorage();
-});
-
-// Save data to the server when the page is about to be unloaded
-window.addEventListener('beforeunload', function () {
-  saveDataToServer();
-});
+// Save data to localStorage
+function saveDataToLocalStorage() {
+    localStorage.setItem('serviceHoursData', JSON.stringify(data));
+}
 
 // Initial update of submitted hours
 updateSubmittedHours();
